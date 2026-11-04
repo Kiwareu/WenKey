@@ -1,0 +1,420 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000000000000000000021 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000012 /* AppDelegate.swift */; };
+		A10000000000000000000022 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000013 /* SceneDelegate.swift */; };
+		A10000000000000000000023 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000014 /* SettingsViewController.swift */; };
+		A10000000000000000000024 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001A /* Constants.swift */; };
+		A10000000000000000000025 /* ThemeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001B /* ThemeStore.swift */; };
+		A10000000000000000000026 /* UserLearningStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001C /* UserLearningStore.swift */; };
+		A10000000000000000000027 /* PinyinEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001D /* PinyinEngine.swift */; };
+		A10000000000000000000028 /* DictionaryData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001E /* DictionaryData.swift */; };
+		A10000000000000000000029 /* KeyboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000017 /* KeyboardViewController.swift */; };
+		A1000000000000000000002A /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001A /* Constants.swift */; };
+		A1000000000000000000002B /* ThemeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001B /* ThemeStore.swift */; };
+		A1000000000000000000002C /* UserLearningStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001C /* UserLearningStore.swift */; };
+		A1000000000000000000002D /* PinyinEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001D /* PinyinEngine.swift */; };
+		A1000000000000000000002E /* DictionaryData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001E /* DictionaryData.swift */; };
+		A1000000000000000000002F /* WenKeyKeyboard.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = A10000000000000000000020 /* WenKeyKeyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A1000000000000000000003B /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000039 /* FeatureFlags.swift */; };
+		A1000000000000000000003C /* CommonPhrasesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000003A /* CommonPhrasesStore.swift */; };
+		A1000000000000000000003D /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000039 /* FeatureFlags.swift */; };
+		A1000000000000000000003E /* CommonPhrasesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000003A /* CommonPhrasesStore.swift */; };
+		A10000000000000000000040 /* KeyboardGestureHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000003F /* KeyboardGestureHandler.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A10000000000000000000033 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				A1000000000000000000002F /* WenKeyKeyboard.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		A10000000000000000000012 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		A10000000000000000000013 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		A10000000000000000000014 /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
+		A10000000000000000000015 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A10000000000000000000016 /* WenKey.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = WenKey.entitlements; sourceTree = "<group>"; };
+		A10000000000000000000017 /* KeyboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardViewController.swift; sourceTree = "<group>"; };
+		A10000000000000000000018 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A10000000000000000000019 /* WenKeyKeyboard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = WenKeyKeyboard.entitlements; sourceTree = "<group>"; };
+		A1000000000000000000001A /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		A1000000000000000000001B /* ThemeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeStore.swift; sourceTree = "<group>"; };
+		A1000000000000000000001C /* UserLearningStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLearningStore.swift; sourceTree = "<group>"; };
+		A1000000000000000000001D /* PinyinEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinyinEngine.swift; sourceTree = "<group>"; };
+		A1000000000000000000001E /* DictionaryData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryData.swift; sourceTree = "<group>"; };
+		A10000000000000000000039 /* FeatureFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureFlags.swift; sourceTree = "<group>"; };
+		A1000000000000000000003A /* CommonPhrasesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommonPhrasesStore.swift; sourceTree = "<group>"; };
+		A1000000000000000000003F /* KeyboardGestureHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardGestureHandler.swift; sourceTree = "<group>"; };
+		A1000000000000000000001F /* WenKey.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WenKey.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000000000000000000020 /* WenKeyKeyboard.appex */ = {isa = PBXFileReference; explicitFileType = wrapper.app-extension; includeInIndex = 0; path = WenKeyKeyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A10000000000000000000031 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A10000000000000000000035 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A1000000000000000000000D = {
+			isa = PBXGroup;
+			children = (
+				A1000000000000000000000E /* App */,
+				A1000000000000000000000F /* Keyboard */,
+				A10000000000000000000010 /* Shared */,
+				A10000000000000000000011 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A1000000000000000000000E /* App */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000012 /* AppDelegate.swift */,
+				A10000000000000000000013 /* SceneDelegate.swift */,
+				A10000000000000000000014 /* SettingsViewController.swift */,
+				A10000000000000000000015 /* Info.plist */,
+				A10000000000000000000016 /* WenKey.entitlements */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		A1000000000000000000000F /* Keyboard */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000017 /* KeyboardViewController.swift */,
+				A1000000000000000000003F /* KeyboardGestureHandler.swift */,
+				A10000000000000000000018 /* Info.plist */,
+				A10000000000000000000019 /* WenKeyKeyboard.entitlements */,
+			);
+			path = Keyboard;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000010 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				A1000000000000000000001A /* Constants.swift */,
+				A1000000000000000000001B /* ThemeStore.swift */,
+				A1000000000000000000001C /* UserLearningStore.swift */,
+				A1000000000000000000001D /* PinyinEngine.swift */,
+				A1000000000000000000001E /* DictionaryData.swift */,
+				A10000000000000000000039 /* FeatureFlags.swift */,
+				A1000000000000000000003A /* CommonPhrasesStore.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000011 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A1000000000000000000001F /* WenKey.app */,
+				A10000000000000000000020 /* WenKeyKeyboard.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A10000000000000000000002 /* WenKey */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A10000000000000000000005 /* Build configuration list for PBXNativeTarget "WenKey" */;
+			buildPhases = (
+				A10000000000000000000030 /* Sources */,
+				A10000000000000000000031 /* Frameworks */,
+				A10000000000000000000032 /* Resources */,
+				A10000000000000000000033 /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A10000000000000000000037 /* PBXTargetDependency */,
+			);
+			name = WenKey;
+			productName = WenKey;
+			productReference = A1000000000000000000001F /* WenKey.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A10000000000000000000003 /* WenKeyKeyboard */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A10000000000000000000006 /* Build configuration list for PBXNativeTarget "WenKeyKeyboard" */;
+			buildPhases = (
+				A10000000000000000000034 /* Sources */,
+				A10000000000000000000035 /* Frameworks */,
+				A10000000000000000000036 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = WenKeyKeyboard;
+			productName = WenKeyKeyboard;
+			productReference = A10000000000000000000020 /* WenKeyKeyboard.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A10000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					A10000000000000000000002 /* WenKey */ = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					A10000000000000000000003 /* WenKeyKeyboard */ = {
+						CreatedOnToolsVersion = 26.0;
+					};
+				};
+			};
+			buildConfigurationList = A10000000000000000000004 /* Build configuration list for PBXProject "WenKey" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A1000000000000000000000D;
+			productRefGroup = A10000000000000000000011 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A10000000000000000000002 /* WenKey */,
+				A10000000000000000000003 /* WenKeyKeyboard */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A10000000000000000000032 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A10000000000000000000036 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A10000000000000000000030 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000021 /* AppDelegate.swift in Sources */,
+				A10000000000000000000022 /* SceneDelegate.swift in Sources */,
+				A10000000000000000000023 /* SettingsViewController.swift in Sources */,
+				A10000000000000000000024 /* Constants.swift in Sources */,
+				A10000000000000000000025 /* ThemeStore.swift in Sources */,
+				A10000000000000000000026 /* UserLearningStore.swift in Sources */,
+				A10000000000000000000027 /* PinyinEngine.swift in Sources */,
+				A10000000000000000000028 /* DictionaryData.swift in Sources */,
+				A1000000000000000000003B /* FeatureFlags.swift in Sources */,
+				A1000000000000000000003C /* CommonPhrasesStore.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A10000000000000000000034 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000029 /* KeyboardViewController.swift in Sources */,
+				A1000000000000000000002A /* Constants.swift in Sources */,
+				A1000000000000000000002B /* ThemeStore.swift in Sources */,
+				A1000000000000000000002C /* UserLearningStore.swift in Sources */,
+				A1000000000000000000002D /* PinyinEngine.swift in Sources */,
+				A1000000000000000000002E /* DictionaryData.swift in Sources */,
+				A1000000000000000000003D /* FeatureFlags.swift in Sources */,
+				A1000000000000000000003E /* CommonPhrasesStore.swift in Sources */,
+				A10000000000000000000040 /* KeyboardGestureHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A10000000000000000000037 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A10000000000000000000003 /* WenKeyKeyboard */;
+			targetProxy = A10000000000000000000038 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXContainerItemProxy section */
+		A10000000000000000000038 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A10000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A10000000000000000000003;
+			remoteInfo = WenKeyKeyboard;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin XCBuildConfiguration section */
+		A10000000000000000000007 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.1.0;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A10000000000000000000008 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.1.0;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		A10000000000000000000009 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = App/WenKey.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = App/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wenx.wenkey;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMBED_LIBRARIES_WITH_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A1000000000000000000000A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = App/WenKey.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = App/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wenx.wenkey;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMBED_LIBRARIES_WITH_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		A1000000000000000000000B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Keyboard/WenKeyKeyboard.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Keyboard/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.wenx.wenkey.keyboard;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMBED_LIBRARIES_WITH_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A1000000000000000000000C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Keyboard/WenKeyKeyboard.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Keyboard/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.wenx.wenkey.keyboard;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMBED_LIBRARIES_WITH_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A10000000000000000000004 /* Build configuration list for PBXProject "WenKey" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000000000000000000007 /* Debug */,
+				A10000000000000000000008 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A10000000000000000000005 /* Build configuration list for PBXNativeTarget "WenKey" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000000000000000000009 /* Debug */,
+				A1000000000000000000000A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A10000000000000000000006 /* Build configuration list for PBXNativeTarget "WenKeyKeyboard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1000000000000000000000B /* Debug */,
+				A1000000000000000000000C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A10000000000000000000001 /* Project object */;
+}

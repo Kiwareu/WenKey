@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode 26
+        run: |
+          ls /Applications/ | grep -i xcode || true
+          sudo xcode-select -s /Applications/Xcode_26.app/Contents/Developer 2>/dev/null || true
+          xcodebuild -version
+      - name: Build (compile check, no signing)
+        run: |
+          xcodebuild -project WenKey/WenKey.xcodeproj -target WenKey -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO build
