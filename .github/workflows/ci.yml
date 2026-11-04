@@ -12,7 +12,8 @@ jobs:
     steps:
       - run: echo "actions works on this repo"
   build:
-    runs-on: macos-26
+    # 跟 Lowex 的 build-ipa.yml 保持一致：用 macos-latest（Lowex 在同一账号上跑通过）
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - name: Select Xcode 26
