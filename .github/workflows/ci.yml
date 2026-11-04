@@ -7,6 +7,10 @@ on:
     branches: [main]
 
 jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "actions works on this repo"
   build:
     runs-on: macos-26
     steps:
