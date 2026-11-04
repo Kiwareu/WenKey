@@ -81,8 +81,8 @@ WenKey/
 
 ## 下一轮要补什么（按 DESIGN.md 修订后的分阶段）
 
-1. CI 编译验证（Xcode 26）：2026-11-05 已修三处编译错误（底行 IUO 解包、UIGlassEffect 走
-   visualEffect、segmentationLimit 去 private），等新一轮结果。
+1. CI 编译验证（Xcode 26）：2026-11-05 已修编译错误（底行 IUO 解包、UIGlassEffect 走
+   visualEffect、segmentationLimit 改 public——公开函数的默认值只能引用公开成员），等新一轮结果。
 2. P1 效率手势：滑行（英文）、空格光标、删词手势、长按符号、双击空格句号、
    自动大写、候选栏滑动——接上面留好的扩展口。
 3. P2 词库与自学习 + 英文纠错联想。
