@@ -5,7 +5,7 @@ import UIKit
 /// 支持：26 键 QWERTY、拼音模式（按键显示大写字母）与英文模式切换、
 /// 整行拼音整句候选、删除 / 空格 / 回车 / Shift、中英文切换。
 /// 占位（P2/P3 再实现，按钮已置灰禁用，不冒充功能）：语音、剪贴板。
-/// 外观：连续圆角大圆角按键；iOS 26 用液态玻璃（glassEffect），低版本回落纯色。
+/// 外观：连续圆角大圆角按键；iOS 26 用液态玻璃（UIGlassEffect），低版本回落纯色。
 final class KeyboardViewController: UIInputViewController {
 
     // MARK: - 状态
@@ -181,7 +181,7 @@ final class KeyboardViewController: UIInputViewController {
         enter.addTarget(self, action: #selector(returnTapped), for: .touchUpInside)
         enter.widthAnchor.constraint(equalToConstant: 64).isActive = true
 
-        for button in [globe, shiftButton, modeButton, voice, space, clipboard, delete, enter] {
+        for button in [globe, shiftButton!, modeButton!, voice, space, clipboard, delete, enter] {
             row.addArrangedSubview(button)
         }
         row.heightAnchor.constraint(equalToConstant: 52).isActive = true
@@ -202,22 +202,20 @@ final class KeyboardViewController: UIInputViewController {
             return outgoing
         }
         config.background.cornerRadius = 12
-        config.background.backgroundColor = theme.color(for: isFunction ? .functionKeyBackground : .keyBackground)
+        if #available(iOS 26.0, *) {
+            // UIKit 液态玻璃：UIGlassEffect 是 UIVisualEffect，走配置背景的 visualEffect。
+            // 注意 UIButton 本身没有 glassEffect 属性（CI 已证实），不要再往 button 上挂。
+            config.background.visualEffect = UIGlassEffect(style: .regular)
+        } else {
+            config.background.backgroundColor = theme.color(for: isFunction ? .functionKeyBackground : .keyBackground)
+        }
         button.configuration = config
         button.tintColor = theme.color(for: .keyText)
         // 连续圆角 + 大圆角：直角方框不要，圆润有弧度。
         button.layer.cornerRadius = 12
         button.layer.cornerCurve = .continuous
-        applyGlass(to: button)
         if isFunction { functionButtons.append(button) }
         return button
-    }
-
-    /// iOS 26 液态玻璃；低版本回落为主题纯色（配置背景色已设好）。
-    private func applyGlass(to button: UIButton) {
-        if #available(iOS 26.0, *) {
-            button.glassEffect = UIGlassEffect(style: .regular)
-        }
     }
 
     private func applyTheme() {

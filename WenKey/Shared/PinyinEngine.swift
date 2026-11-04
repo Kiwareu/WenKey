@@ -60,7 +60,7 @@ public final class PinyinEngine {
     /// 每步 DP 保留的候选数上限（防组合爆炸）。
     private static let beamWidth = 12
     /// 每步切分保留的切法数上限。
-    private static let segmentationLimit = 4
+    static let segmentationLimit = 4
     /// 每多一个词的惩罚（倾向长词、少断点）。
     private static let perWordPenalty = 0.5
 

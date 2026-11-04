@@ -45,7 +45,7 @@ WenKey/
 - 整行拼音整句联想：打 `woxiangchifan` 出“我想吃饭”这类整句；候选栏前半是整句候选，
   后半（｜之后）是首音节的单字分词候选，点单字上屏后剩余音节继续留着拼。
 - 删除（先删拼音字母再删正文）、空格（首选上屏 + 空格）、回车（首选上屏 / 换行）。
-- 按键：连续圆角大圆角；iOS 26 用 `glassEffect` 液态玻璃，低版本回落主题纯色。
+- 按键：连续圆角大圆角；iOS 26 用 `UIGlassEffect` 液态玻璃（走配置背景 visualEffect），低版本回落主题纯色。
 - 按键缩放动画 + 轻触感（`UIImpactFeedbackGenerator`）、候选点选反馈。
 - 主题分部位颜色存取已通（调色 UI 在 P5）。
 
@@ -76,12 +76,13 @@ WenKey/
 - 词典只覆盖常用词；冷僻音节没有单字可出时，候选栏显示原文，空格原样上屏。P2 扩词库。
 - 中文模式下 Shift 不参与拼音输入（按钮置灰）；P1 可再定 Shift 在中文模式的行为。
 - 点分词候选只保留首选切法的剩余音节；多切法歧义时以首选为准。P2 可优化。
-- 液态玻璃用 iOS 26 UIKit 的 `UIView.glassEffect` / `UIGlassEffect`，CI 上 Xcode 26 会验证；
-  若该 API 与预期有出入，CI 报错时再按 Xcode 26 实际 SDK 调整（P0 不写死 crash 的 API）。
+- 液态玻璃用 iOS 26 UIKit 的 `UIGlassEffect`（走配置背景 visualEffect；UIButton 本身没有
+  glassEffect 属性，2026-11-05 CI 已证实）。
 
 ## 下一轮要补什么（按 DESIGN.md 修订后的分阶段）
 
-1. CI 编译验证（Xcode 26）：修编译错误，确认 `glassEffect` 等 API。
+1. CI 编译验证（Xcode 26）：2026-11-05 已修三处编译错误（底行 IUO 解包、UIGlassEffect 走
+   visualEffect、segmentationLimit 去 private），等新一轮结果。
 2. P1 效率手势：滑行（英文）、空格光标、删词手势、长按符号、双击空格句号、
    自动大写、候选栏滑动——接上面留好的扩展口。
 3. P2 词库与自学习 + 英文纠错联想。
