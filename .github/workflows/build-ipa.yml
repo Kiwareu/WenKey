@@ -20,8 +20,10 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
+          # 注意：-target + -derivedDataPath 会被 xcodebuild 拒绝（要求 -scheme），
+          # 而本工程没有共享 scheme；改用 SYMROOT 定向产物目录，效果相同。
           xcodebuild -project WenKey/WenKey.xcodeproj -target WenKey -configuration Release \
-            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build \
+            -sdk iphoneos -destination 'generic/platform=iOS' SYMROOT=build \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
             ARCHS=arm64 ONLY_ACTIVE_ARCH=NO clean build 2>&1 | tee build.log | tail -60
       - name: Show build errors
@@ -29,7 +31,8 @@ jobs:
         run: grep -n -B1 -A8 "error:\|error " build.log | head -80 || true
       - name: Package IPA
         run: |
-          APP=$(find build/Build/Products -name "WenKey.app" -maxdepth 3 | head -1)
+          APP="build/Release-iphoneos/WenKey.app"
+          if [ ! -d "$APP" ]; then APP=$(find build -name "WenKey.app" -maxdepth 4 | head -1); fi
           echo "APP=$APP"
           rm -rf Payload WenKey.ipa && mkdir Payload && cp -R "$APP" Payload/
           brew install ldid || true
