@@ -163,6 +163,8 @@ final class ClipboardTabViewController: UIViewController, UITableViewDataSource,
 
         tableView.dataSource = self
         tableView.delegate = self
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 60
         tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
 
@@ -275,6 +277,8 @@ final class PhrasesTabViewController: UIViewController, UITableViewDataSource, U
 
         tableView.dataSource = self
         tableView.delegate = self
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 60
         tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
@@ -383,19 +387,19 @@ final class SkinsTabViewController: UIViewController {
         for part in ThemePart.allCases {
             let row = UIStackView()
             row.axis = .horizontal
-            row.spacing = 8
+            row.spacing = 6
             row.alignment = .center
             let label = makeLabel(part.displayName, size: 14)
-            label.widthAnchor.constraint(equalToConstant: 72).isActive = true
+            label.widthAnchor.constraint(equalToConstant: 64).isActive = true
             row.addArrangedSubview(label)
             for hex in swatchHexes {
                 let swatch = UIButton(type: .system)
                 swatch.backgroundColor = UIColor(wenKeyAppHex: hex)
-                swatch.layer.cornerRadius = 11
+                swatch.layer.cornerRadius = 10
                 swatch.layer.borderWidth = 0.5
                 swatch.layer.borderColor = UIColor.systemGray4.cgColor
-                swatch.widthAnchor.constraint(equalToConstant: 22).isActive = true
-                swatch.heightAnchor.constraint(equalToConstant: 22).isActive = true
+                swatch.widthAnchor.constraint(equalToConstant: 20).isActive = true
+                swatch.heightAnchor.constraint(equalToConstant: 20).isActive = true
                 swatch.addAction(UIAction { _ in
                     if let color = UIColor(wenKeyAppHex: hex) {
                         ThemeStore.shared.setColor(color, for: part)
@@ -430,6 +434,8 @@ final class SettingsViewController: UIViewController, UITableViewDataSource, UIT
         view.backgroundColor = .systemBackground
         tableView.dataSource = self
         tableView.delegate = self
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 60
         tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
         NSLayoutConstraint.activate([

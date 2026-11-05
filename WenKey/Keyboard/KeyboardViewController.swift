@@ -99,8 +99,8 @@ final class KeyboardViewController: UIInputViewController {
         applyTheme()
         refreshKeyTitles()
         refreshCandidates()
-        // 键盘固定高度：候选栏 44 + 4 行 × 52 + 间距。
-        view.heightAnchor.constraint(equalToConstant: 288).isActive = true
+        // 键盘固定高度：候选栏 40 + 4 行 × 50 + 间距。
+        view.heightAnchor.constraint(equalToConstant: 272).isActive = true
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -123,14 +123,14 @@ final class KeyboardViewController: UIInputViewController {
         view.backgroundColor = theme.color(for: .keyboardBackground)
 
         rootStack.axis = .vertical
-        rootStack.spacing = 6
+        rootStack.spacing = 5
         rootStack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(rootStack)
         NSLayoutConstraint.activate([
-            rootStack.topAnchor.constraint(equalTo: view.topAnchor, constant: 6),
-            rootStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 6),
-            rootStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -6),
-            rootStack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -6),
+            rootStack.topAnchor.constraint(equalTo: view.topAnchor, constant: 4),
+            rootStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 4),
+            rootStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -4),
+            rootStack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -4),
         ])
 
         // 候选栏：横向滚动，整句候选在前，分词候选在后（以 ｜ 分隔）。
@@ -151,15 +151,22 @@ final class KeyboardViewController: UIInputViewController {
             candidateStack.leadingAnchor.constraint(equalTo: candidateScrollView.leadingAnchor, constant: 8),
             candidateStack.trailingAnchor.constraint(equalTo: candidateScrollView.trailingAnchor, constant: -8),
         ])
-        candidateScrollView.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        candidateScrollView.heightAnchor.constraint(equalToConstant: 40).isActive = true
         rootStack.addArrangedSubview(candidateScrollView)
 
-        // 三行字母键。
-        for row in letterRows {
+        // 三行字母键。第 2、3 行左右缩进，像正常键盘那样错开，不再是齐边网格。
+        for (rowIndex, row) in letterRows.enumerated() {
             let rowStack = UIStackView()
             rowStack.axis = .horizontal
-            rowStack.spacing = 6
+            rowStack.spacing = 5
             rowStack.distribution = .fillEqually
+            if rowIndex == 1 {
+                rowStack.isLayoutMarginsRelativeArrangement = true
+                rowStack.layoutMargins = UIEdgeInsets(top: 0, left: 18, bottom: 0, right: 18)
+            } else if rowIndex == 2 {
+                rowStack.isLayoutMarginsRelativeArrangement = true
+                rowStack.layoutMargins = UIEdgeInsets(top: 0, left: 36, bottom: 0, right: 36)
+            }
             for char in row {
                 let letter = String(char)
                 let button = makeKeyButton(title: letter.uppercased(), isFunction: false)
@@ -170,41 +177,36 @@ final class KeyboardViewController: UIInputViewController {
                 letterButtons.append((letter, button))
                 rowStack.addArrangedSubview(button)
             }
-            rowStack.heightAnchor.constraint(equalToConstant: 52).isActive = true
+            rowStack.heightAnchor.constraint(equalToConstant: 50).isActive = true
             rootStack.addArrangedSubview(rowStack)
         }
 
-        // 底行：地球键、Shift、中英切换、语音（占位）、空格、剪贴板（占位）、删除、回车。
+        // 底行：地球键、Shift、中英切换、空格、剪贴板、删除、回车。
+        // 注意：语音还是占位键，先不放到底行占宽，等 P3 真做了再放回来；
+        // 底行固定宽之和必须小于最窄屏幕，否则回车键会被挤出屏幕（v0.2.1 的 bug）。
         buildBottomRow()
     }
 
     private func buildBottomRow() {
         let row = UIStackView()
         row.axis = .horizontal
-        row.spacing = 6
+        row.spacing = 4
         row.distribution = .fill
 
         let globe = makeKeyButton(systemImage: "globe", isFunction: true)
         globe.accessibilityLabel = "切换到下一个键盘"
         globe.addTarget(self, action: #selector(globeTapped), for: .touchUpInside)
-        globe.widthAnchor.constraint(equalToConstant: 48).isActive = true
+        globe.widthAnchor.constraint(equalToConstant: 40).isActive = true
 
         shiftButton = makeKeyButton(systemImage: "shift", isFunction: true)
         shiftButton.accessibilityLabel = "Shift"
         shiftButton.addTarget(self, action: #selector(shiftTapped), for: .touchUpInside)
-        shiftButton.widthAnchor.constraint(equalToConstant: 52).isActive = true
+        shiftButton.widthAnchor.constraint(equalToConstant: 44).isActive = true
 
         modeButton = makeKeyButton(title: "中文", isFunction: true)
         modeButton.accessibilityLabel = "切换中英文"
         modeButton.addTarget(self, action: #selector(modeTapped), for: .touchUpInside)
-        modeButton.widthAnchor.constraint(equalToConstant: 64).isActive = true
-
-        // 语音：P2 占位。置灰禁用，不冒充已实现。
-        let voice = makeKeyButton(systemImage: "mic.fill", isFunction: true)
-        voice.accessibilityLabel = "语音输入（P2 接入，暂未实现）"
-        voice.isEnabled = false
-        voice.alpha = 0.5
-        voice.widthAnchor.constraint(equalToConstant: 48).isActive = true
+        modeButton.widthAnchor.constraint(equalToConstant: 52).isActive = true
 
         spaceButton = makeKeyButton(title: "", isFunction: false)
         let space = spaceButton!
@@ -218,24 +220,24 @@ final class KeyboardViewController: UIInputViewController {
         let clipboard = makeKeyButton(systemImage: "doc.on.clipboard", isFunction: true)
         clipboard.accessibilityLabel = "剪贴板"
         clipboard.addTarget(self, action: #selector(clipboardTapped), for: .touchUpInside)
-        clipboard.widthAnchor.constraint(equalToConstant: 48).isActive = true
+        clipboard.widthAnchor.constraint(equalToConstant: 40).isActive = true
 
         deleteButton = makeKeyButton(systemImage: "delete.left", isFunction: true)
         let delete = deleteButton!
         delete.accessibilityLabel = "删除"
         // P1：删除的点按与长按都走手势识别器（setupP1Gestures 里挂），
         // 不再用 touchUpInside，避免长按滑动后抬起又多删一字。
-        delete.widthAnchor.constraint(equalToConstant: 52).isActive = true
+        delete.widthAnchor.constraint(equalToConstant: 44).isActive = true
 
         let enter = makeKeyButton(systemImage: "return", isFunction: true)
         enter.accessibilityLabel = "回车"
         enter.addTarget(self, action: #selector(returnTapped), for: .touchUpInside)
-        enter.widthAnchor.constraint(equalToConstant: 64).isActive = true
+        enter.widthAnchor.constraint(equalToConstant: 52).isActive = true
 
-        for button in [globe, shiftButton!, modeButton!, voice, space, clipboard, delete, enter] {
+        for button in [globe, shiftButton!, modeButton!, space, clipboard, delete, enter] {
             row.addArrangedSubview(button)
         }
-        row.heightAnchor.constraint(equalToConstant: 52).isActive = true
+        row.heightAnchor.constraint(equalToConstant: 50).isActive = true
         rootStack.addArrangedSubview(row)
     }
 
@@ -379,11 +381,12 @@ final class KeyboardViewController: UIInputViewController {
             return
         }
         if sentenceCandidates.isEmpty && charCandidates.isEmpty {
-            // 拼不出合法音节时原样显示正在拼的字母，提示用户可删除重拼。
+            // 拼不出合法音节：把原因写清楚，别让用户以为键盘坏了。
+            // 比如 hh j h 这种串没有任何合法音节，就出不了中文。
             let raw = UILabel()
-            raw.text = pinyinBuffer
-            raw.font = UIFont.systemFont(ofSize: 17)
-            raw.textColor = theme.color(for: .candidateText)
+            raw.text = "\(pinyinBuffer)（拼不出来，删掉重拼完整拼音）"
+            raw.font = UIFont.systemFont(ofSize: 15)
+            raw.textColor = .secondaryLabel
             candidateStack.addArrangedSubview(raw)
             return
         }
