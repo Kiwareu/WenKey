@@ -22,8 +22,9 @@ jobs:
           set -o pipefail
           # 注意：-target + -derivedDataPath 会被 xcodebuild 拒绝（要求 -scheme），
           # 而本工程没有共享 scheme；改用 SYMROOT 定向产物目录，效果相同。
+          # SYMROOT 必须用绝对路径：相对路径会按工程目录解析，打包步骤在仓库根目录就找不到了。
           xcodebuild -project WenKey/WenKey.xcodeproj -target WenKey -configuration Release \
-            -sdk iphoneos -destination 'generic/platform=iOS' SYMROOT=build \
+            -sdk iphoneos -destination 'generic/platform=iOS' SYMROOT="$GITHUB_WORKSPACE/build" \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
             ARCHS=arm64 ONLY_ACTIVE_ARCH=NO clean build 2>&1 | tee build.log | tail -60
       - name: Show build errors
