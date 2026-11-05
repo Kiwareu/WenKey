@@ -25,8 +25,8 @@ final class KeyboardViewController: UIInputViewController {
     private var shiftState: ShiftState = .off
     private var lastShiftTapTime: Date?
 
-    /// P1 手势扩展口：P0 不赋值，不挂任何手势识别器。
-    /// P1 实现 KeyboardGestureHandler 并赋值后，再给空格键、删除键、字母键挂手势。
+    /// P1 手势扩展口：实现见文件末尾的 KeyboardGestureHandler 扩展；
+    /// setupP1Gestures() 里赋值并挂手势识别器。
     var gestureHandler: KeyboardGestureHandler?
     /// 当前正在拼的拼音字母（小写）。中文模式专用。
     private var pinyinBuffer = ""
@@ -53,12 +53,47 @@ final class KeyboardViewController: UIInputViewController {
     private var spaceButton: KeyButton!
     private var deleteButton: KeyButton!
 
+    // MARK: - P1 手势状态
+
+    /// 空格触控板：上次手指位置（view 坐标）、未满一个字符的剩余位移。
+    private var spaceTrackpadLastX: CGFloat = 0
+    private var spaceTrackpadRemainder: CGFloat = 0
+    /// 删词滑动：上次手指位置、净左滑距离（右滑缩减）、历史最大左滑距离、当前预览词数。
+    private var deleteSwipeLastX: CGFloat = 0
+    private var deleteSwipeDistance: CGFloat = 0
+    private var deleteSwipeMaxDistance: CGFloat = 0
+    private var deleteSwipeWordCount = 0
+    /// 滑行：是否正在滑行、轨迹字母、当前预览词、起手字母（手势代理在 shouldBegin 里记下）。
+    private var glideActive = false
+    private var glidePath: [String] = []
+    private var glidePreview: String?
+    private var glideSeedLetter: String?
+    private var glidePanRecognizer: UIPanGestureRecognizer?
+    /// 长按符号面板与遮罩（点遮罩关闭面板）。
+    private var symbolPanel: UIView?
+    private var symbolPanelOverlay: UIControl?
+    /// 长按已弹面板时，本次触摸抬起触发的 letterTapped 应跳过（不重复输入字母）。
+    private var suppressNextLetterTap = false
+    /// 上次普通空格插入时间（双击空格句号的窗口判断用）。
+    private var lastSpaceTapAt: Date?
+
+    /// 长按符号表：每键长按出的符号（首个同时写入 KeyButton.longPressTitle）。
+    private static let longPressSymbols: [String: [String]] = [
+        "q": ["1"], "w": ["2"], "e": ["3"], "r": ["4"], "t": ["5"],
+        "y": ["6"], "u": ["7"], "i": ["8"], "o": ["9"], "p": ["0"],
+        "a": ["@"], "s": ["#"], "d": ["$"], "f": ["%"], "g": ["&"],
+        "h": ["-", "_"], "j": ["+", "="], "k": ["("], "l": [")"],
+        "z": ["*"], "x": ["\""], "c": ["'"], "v": [":"], "b": [";"],
+        "n": ["!"], "m": ["?"],
+    ]
+
     private let letterRows = ["qwertyuiop", "asdfghjkl", "zxcvbnm"]
 
     override func viewDidLoad() {
         super.viewDidLoad()
         keyHaptic.prepare()
         buildUI()
+        setupP1Gestures()
         applyTheme()
         refreshKeyTitles()
         refreshCandidates()
@@ -89,6 +124,8 @@ final class KeyboardViewController: UIInputViewController {
         ])
 
         // 候选栏：横向滚动，整句候选在前，分词候选在后（以 ｜ 分隔）。
+        // P1 按页滚动：滑动一次翻一屏候选。
+        candidateScrollView.isPagingEnabled = true
         candidateScrollView.showsHorizontalScrollIndicator = false
         candidateScrollView.backgroundColor = theme.color(for: .candidateBarBackground)
         candidateScrollView.layer.cornerRadius = 12
@@ -118,6 +155,8 @@ final class KeyboardViewController: UIInputViewController {
                 let button = makeKeyButton(title: letter.uppercased(), isFunction: false)
                 button.addTarget(self, action: #selector(letterTapped(_:)), for: .touchUpInside)
                 button.accessibilityLabel = letter
+                // P1 长按符号的数据位：首个符号；面板内容见 longPressSymbols。
+                button.longPressTitle = Self.longPressSymbols[letter]?.first
                 letterButtons.append((letter, button))
                 rowStack.addArrangedSubview(button)
             }
@@ -160,7 +199,8 @@ final class KeyboardViewController: UIInputViewController {
         spaceButton = makeKeyButton(title: "", isFunction: false)
         let space = spaceButton!
         space.accessibilityLabel = "空格"
-        space.addTarget(self, action: #selector(spaceTapped), for: .touchUpInside)
+        // P1：空格的点按与长按都走手势识别器（setupP1Gestures 里挂），
+        // 不再用 touchUpInside，避免长按触控板后抬起又多插一个空格。
         space.setContentHuggingPriority(.defaultLow, for: .horizontal)
 
         // 剪贴板：P3 占位。置灰禁用，不冒充已实现。
@@ -173,7 +213,8 @@ final class KeyboardViewController: UIInputViewController {
         deleteButton = makeKeyButton(systemImage: "delete.left", isFunction: true)
         let delete = deleteButton!
         delete.accessibilityLabel = "删除"
-        delete.addTarget(self, action: #selector(deleteTapped), for: .touchUpInside)
+        // P1：删除的点按与长按都走手势识别器（setupP1Gestures 里挂），
+        // 不再用 touchUpInside，避免长按滑动后抬起又多删一字。
         delete.widthAnchor.constraint(equalToConstant: 52).isActive = true
 
         let enter = makeKeyButton(systemImage: "return", isFunction: true)
@@ -280,6 +321,25 @@ final class KeyboardViewController: UIInputViewController {
             candidateStack.removeArrangedSubview(subview)
             subview.removeFromSuperview()
         }
+        // 新一屏候选从头看；滑行/删词预览期间也一样（预览只有一项）。
+        candidateScrollView.setContentOffset(.zero, animated: false)
+        // P1 预览优先于常规内容：滑行匹配词、删词词数。
+        if let preview = glidePreview {
+            let label = UILabel()
+            label.text = preview
+            label.font = UIFont.systemFont(ofSize: 17)
+            label.textColor = theme.color(for: .candidateText)
+            candidateStack.addArrangedSubview(label)
+            return
+        }
+        if deleteSwipeWordCount > 0 {
+            let label = UILabel()
+            label.text = "松手删除 \(deleteSwipeWordCount) 个词"
+            label.font = UIFont.systemFont(ofSize: 15)
+            label.textColor = .secondaryLabel
+            candidateStack.addArrangedSubview(label)
+            return
+        }
         if pinyinBuffer.isEmpty {
             // 未输入时显示当前模式提示。
             let hint = UILabel()
@@ -372,11 +432,22 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     @objc private func letterTapped(_ sender: KeyButton) {
+        // P1 长按已弹符号面板时，抬起这次触摸不重复输入字母。
+        if suppressNextLetterTap {
+            suppressNextLetterTap = false
+            return
+        }
         keyHaptic.impactOccurred()
         guard let pair = letterButtons.first(where: { $0.button === sender }) else { return }
         switch mode {
         case .english:
-            let char = (shiftState == .off) ? pair.letter : pair.letter.uppercased()
+            var char = (shiftState == .off) ? pair.letter : pair.letter.uppercased()
+            // P1 英文句首自动大写：只在未按 Shift 时补，Shift 自身逻辑不动。
+            if shiftState == .off,
+               FeatureFlagStore.shared.isEnabled(.autoCapitalization),
+               isSentenceStart() {
+                char = char.uppercased()
+            }
             textDocumentProxy.insertText(char)
             if shiftState == .on {
                 shiftState = .off
@@ -386,6 +457,17 @@ final class KeyboardViewController: UIInputViewController {
             pinyinBuffer += pair.letter
             refreshCandidates()
         }
+    }
+
+    /// 句首判定（启发式）：文档开头、换行后、句末标点后都算句首。
+    /// 读不到文档上下文的应用返回 false（不大写），不猜。
+    private func isSentenceStart() -> Bool {
+        guard let before = textDocumentProxy.documentContextBeforeInput else { return false }
+        var text = before
+        while text.hasSuffix(" ") || text.hasSuffix("\t") { text.removeLast() }
+        if text.isEmpty { return true }
+        guard let last = text.last else { return true }
+        return last == "." || last == "!" || last == "?" || last == "\n"
     }
 
     @objc private func deleteTapped() {
@@ -410,9 +492,32 @@ final class KeyboardViewController: UIInputViewController {
                 commitCandidate(sentenceCandidates[0])
                 textDocumentProxy.insertText(" ")
             }
+            lastSpaceTapAt = Date()
+        } else if isDoubleSpaceTap() {
+            // P1 双击空格：删掉上一个空格，换成句号。
+            // 英文句号后带空格，中文句号不带；句号后不再武装双击，避免连点出连续句号。
+            textDocumentProxy.deleteBackward()
+            if mode == .chinese {
+                textDocumentProxy.insertText("。")
+            } else {
+                textDocumentProxy.insertText(". ")
+            }
+            lastSpaceTapAt = nil
         } else {
             textDocumentProxy.insertText(" ")
+            lastSpaceTapAt = Date()
         }
+    }
+
+    /// 双击空格判定：开关开 + 上次空格在 0.5 秒内 + 光标前确有一个空格。
+    /// 光标前无空格时（如刚打完字母、删过字）自动不触发，不需要额外复位标志。
+    private func isDoubleSpaceTap() -> Bool {
+        guard FeatureFlagStore.shared.isEnabled(.doubleSpacePeriod),
+              let last = lastSpaceTapAt,
+              Date().timeIntervalSince(last) < 0.5,
+              let before = textDocumentProxy.documentContextBeforeInput,
+              before.hasSuffix(" ") else { return false }
+        return true
     }
 
     @objc private func returnTapped() {
@@ -455,11 +560,449 @@ final class KeyboardViewController: UIInputViewController {
     @objc private func globeTapped() {
         advanceToNextInputMode()
     }
+
+    // MARK: - P1 手势接线
+
+    /// 挂 P1 手势识别器（viewDidLoad 里 buildUI 之后调）。
+    /// 开关门控不在挂接时做，而在手势代理 shouldBegin 里做：开关关了，
+    /// 对应长按/滑行根本不开始，轻点行为完全不受影响。
+    private func setupP1Gestures() {
+        gestureHandler = self
+
+        // 空格：轻点插空格（tap），长按变触控板（long-press）。
+        // tap 等 long-press 失败才触发，长按后抬起不重复插空格。
+        let spaceTap = UITapGestureRecognizer(target: self, action: #selector(spaceTapped))
+        spaceTap.delegate = self
+        spaceButton.addGestureRecognizer(spaceTap)
+        let spaceLongPress = UILongPressGestureRecognizer(target: self, action: #selector(spaceLongPressChanged(_:)))
+        spaceLongPress.minimumPressDuration = 0.3
+        spaceLongPress.allowableMovement = .greatestFiniteMagnitude
+        spaceLongPress.cancelsTouchesInView = false
+        spaceLongPress.delegate = self
+        spaceButton.addGestureRecognizer(spaceLongPress)
+        spaceTap.require(toFail: spaceLongPress)
+
+        // 删除：轻点删一字，长按左滑按词删（松手执行，右滑缩减）。
+        let deleteTap = UITapGestureRecognizer(target: self, action: #selector(deleteTapped))
+        deleteTap.delegate = self
+        deleteButton.addGestureRecognizer(deleteTap)
+        let deleteLongPress = UILongPressGestureRecognizer(target: self, action: #selector(deleteLongPressChanged(_:)))
+        deleteLongPress.minimumPressDuration = 0.3
+        deleteLongPress.allowableMovement = .greatestFiniteMagnitude
+        deleteLongPress.cancelsTouchesInView = false
+        deleteLongPress.delegate = self
+        deleteButton.addGestureRecognizer(deleteLongPress)
+        deleteTap.require(toFail: deleteLongPress)
+
+        // 字母：长按出符号面板（点选插入）；抬起那下不重复输入字母。
+        for pair in letterButtons {
+            let longPress = UILongPressGestureRecognizer(target: self, action: #selector(letterLongPressChanged(_:)))
+            longPress.minimumPressDuration = 0.4
+            longPress.allowableMovement = .greatestFiniteMagnitude
+            // 不取消按键触摸：抬起仍走 letterTapped，由防重复标志跳过本次输入。
+            longPress.cancelsTouchesInView = false
+            longPress.delegate = self
+            pair.button.addGestureRecognizer(longPress)
+        }
+
+        // 滑行：仅英文模式、在字母键上起手；其余区域与候选栏不受影响。
+        let glidePan = UIPanGestureRecognizer(target: self, action: #selector(glidePanChanged(_:)))
+        glidePan.delegate = self
+        view.addGestureRecognizer(glidePan)
+        glidePanRecognizer = glidePan
+    }
+
+    // MARK: - P1 手势翻译（识别器事件 → 协议回调）
+
+    @objc private func spaceLongPressChanged(_ recognizer: UILongPressGestureRecognizer) {
+        switch recognizer.state {
+        case .began:
+            spaceTrackpadLastX = recognizer.location(in: view).x
+            spaceTrackpadRemainder = 0
+            selectionHaptic.selectionChanged()
+        case .changed:
+            let x = recognizer.location(in: view).x
+            gestureHandler?.spaceCursorMoved(deltaX: x - spaceTrackpadLastX)
+            spaceTrackpadLastX = x
+        case .ended, .cancelled:
+            gestureHandler?.spaceCursorEnded()
+        default:
+            break
+        }
+    }
+
+    @objc private func deleteLongPressChanged(_ recognizer: UILongPressGestureRecognizer) {
+        switch recognizer.state {
+        case .began:
+            deleteSwipeLastX = recognizer.location(in: view).x
+            deleteSwipeDistance = 0
+            deleteSwipeMaxDistance = 0
+            deleteSwipeWordCount = 0
+            selectionHaptic.selectionChanged()
+        case .changed:
+            let x = recognizer.location(in: view).x
+            gestureHandler?.deleteSwipeMoved(deltaX: x - deleteSwipeLastX)
+            deleteSwipeLastX = x
+        case .ended:
+            gestureHandler?.deleteSwipeEnded(committed: deleteSwipeWordCount > 0)
+        case .cancelled:
+            // 取消不删：只清状态与预览，不调协议（协议的 ended 含松手删除语义）。
+            deleteSwipeDistance = 0
+            deleteSwipeMaxDistance = 0
+            deleteSwipeWordCount = 0
+            rebuildCandidateBar()
+        default:
+            break
+        }
+    }
+
+    @objc private func letterLongPressChanged(_ recognizer: UILongPressGestureRecognizer) {
+        guard let button = recognizer.view as? KeyButton,
+              let pair = letterButtons.first(where: { $0.button === button }) else { return }
+        switch recognizer.state {
+        case .began:
+            // 滑行中不弹面板（按住后起滑时面板由滑行开始处关闭）。
+            if glideActive { return }
+            gestureHandler?.keyLongPressed(letter: pair.letter)
+        case .ended:
+            // 抬起时手指已滑出按键：不会再有 letterTapped，清除防重复标志。
+            let location = recognizer.location(in: button)
+            if !button.bounds.contains(location) {
+                suppressNextLetterTap = false
+            }
+        case .cancelled:
+            suppressNextLetterTap = false
+            dismissSymbolPanel()
+        default:
+            break
+        }
+    }
+
+    @objc private func glidePanChanged(_ recognizer: UIPanGestureRecognizer) {
+        switch recognizer.state {
+        case .began:
+            glideActive = true
+            glidePath = []
+            glidePreview = nil
+            suppressNextLetterTap = false
+            dismissSymbolPanel()
+            if let seed = glideSeedLetter {
+                glidePath.append(seed)
+            }
+            glideSeedLetter = nil
+            if let letter = letter(at: recognizer.location(in: view)),
+               letter != glidePath.last {
+                glidePath.append(letter)
+            }
+            if !glidePath.isEmpty {
+                gestureHandler?.glidePathUpdated(letters: glidePath)
+            }
+        case .changed:
+            guard glideActive else { return }
+            if let letter = letter(at: recognizer.location(in: view)),
+               letter != glidePath.last {
+                glidePath.append(letter)
+                gestureHandler?.glidePathUpdated(letters: glidePath)
+            }
+        case .ended:
+            glideActive = false
+            gestureHandler?.glidePathEnded()
+        case .cancelled:
+            glideActive = false
+            glidePath = []
+            glidePreview = nil
+            rebuildCandidateBar()
+        default:
+            break
+        }
+    }
+
+    /// 该点落在哪个字母键上（候选栏、底行功能键都返回 nil）。
+    private func letter(at point: CGPoint) -> String? {
+        guard let hit = view.hitTest(point, with: nil) as? KeyButton,
+              let pair = letterButtons.first(where: { $0.button === hit }) else { return nil }
+        return pair.letter
+    }
+
+    // MARK: - P1 符号面板
+
+    @objc private func dismissSymbolPanel() {
+        symbolPanel?.removeFromSuperview()
+        symbolPanel = nil
+        symbolPanelOverlay?.removeFromSuperview()
+        symbolPanelOverlay = nil
+    }
+
+    private func insertSymbol(_ symbol: String) {
+        selectionHaptic.selectionChanged()
+        if mode == .chinese && !pinyinBuffer.isEmpty {
+            // 组词中：先把已拼内容按原样上屏，再插符号，不丢字。
+            commitBufferFallback()
+            clearBuffer()
+        }
+        textDocumentProxy.insertText(symbol)
+        dismissSymbolPanel()
+    }
+}
+
+// MARK: - P1 手势（KeyboardGestureHandler 实现）
+
+extension KeyboardViewController: KeyboardGestureHandler {
+    func spaceCursorMoved(deltaX: CGFloat) {
+        // 每 10pt 移动一个字符；不足一个字符的余量累计到下次。
+        // 只做水平移动：adjustTextPosition 只能按字符偏移，不对应视觉行。
+        spaceTrackpadRemainder += deltaX
+        var steps = 0
+        while spaceTrackpadRemainder >= 10 {
+            steps += 1
+            spaceTrackpadRemainder -= 10
+        }
+        while spaceTrackpadRemainder <= -10 {
+            steps -= 1
+            spaceTrackpadRemainder += 10
+        }
+        if steps != 0 {
+            textDocumentProxy.adjustTextPosition(byCharacterOffset: steps)
+        }
+    }
+
+    func spaceCursorEnded() {
+        spaceTrackpadRemainder = 0
+    }
+
+    func deleteSwipeMoved(deltaX: CGFloat) {
+        deleteSwipeDistance = max(0, deleteSwipeDistance - deltaX)
+        deleteSwipeMaxDistance = max(deleteSwipeMaxDistance, deleteSwipeDistance)
+        // 组词中不删词：不算词数、不出预览；松手逻辑见 deleteSwipeEnded。
+        guard pinyinBuffer.isEmpty else { return }
+        let maxWords = maxDeletableWords()
+        let count = min(Int(deleteSwipeDistance / 28), maxWords, 20)
+        if count != deleteSwipeWordCount {
+            deleteSwipeWordCount = count
+            selectionHaptic.selectionChanged()
+            rebuildCandidateBar()
+        }
+    }
+
+    func deleteSwipeEnded(committed: Bool) {
+        defer {
+            deleteSwipeDistance = 0
+            deleteSwipeMaxDistance = 0
+            deleteSwipeWordCount = 0
+            rebuildCandidateBar()
+        }
+        if !pinyinBuffer.isEmpty {
+            // 组词中：滑动忽略；纯按住松手等同点按，删一个拼音字母。
+            if !committed && deleteSwipeMaxDistance <= 12 {
+                pinyinBuffer.removeLast()
+                refreshCandidates()
+            }
+            return
+        }
+        if committed {
+            let chars = charsForDeletingWords(deleteSwipeWordCount)
+            for _ in 0..<chars {
+                textDocumentProxy.deleteBackward()
+            }
+        } else if deleteSwipeMaxDistance <= 12 {
+            // 纯按住松手（没滑）：等同点按，删一字。
+            textDocumentProxy.deleteBackward()
+        }
+        // 滑出又滑回（committed=false 且滑过）：取消，什么都不删。
+    }
+
+    func keyLongPressed(letter: String) {
+        dismissSymbolPanel()
+        guard let symbols = Self.longPressSymbols[letter], !symbols.isEmpty,
+              let button = letterButtons.first(where: { $0.letter == letter })?.button else { return }
+        suppressNextLetterTap = true
+        selectionHaptic.selectionChanged()
+        // 遮罩：点其他地方关闭面板。
+        let overlay = UIControl(frame: view.bounds)
+        overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        overlay.backgroundColor = .clear
+        overlay.addTarget(self, action: #selector(dismissSymbolPanel), for: .touchUpInside)
+        view.addSubview(overlay)
+        symbolPanelOverlay = overlay
+        // 面板：横向符号按钮，位于按键上方。
+        let panel = UIView()
+        panel.backgroundColor = theme.color(for: .candidateBarBackground)
+        panel.layer.cornerRadius = 12
+        panel.layer.cornerCurve = .continuous
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.spacing = 2
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        panel.addSubview(stack)
+        for symbol in symbols {
+            let symbolButton = UIButton(type: .system)
+            var config = UIButton.Configuration.plain()
+            config.title = symbol
+            config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 6, bottom: 6, trailing: 6)
+            config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+                var outgoing = incoming
+                outgoing.font = UIFont.systemFont(ofSize: 20)
+                return outgoing
+            }
+            symbolButton.configuration = config
+            symbolButton.setTitleColor(theme.color(for: .candidateText), for: .normal)
+            symbolButton.addAction(UIAction { [weak self] _ in self?.insertSymbol(symbol) }, for: .touchUpInside)
+            symbolButton.widthAnchor.constraint(equalToConstant: 44).isActive = true
+            stack.addArrangedSubview(symbolButton)
+        }
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: panel.topAnchor, constant: 4),
+            stack.bottomAnchor.constraint(equalTo: panel.bottomAnchor, constant: -4),
+            stack.leadingAnchor.constraint(equalTo: panel.leadingAnchor, constant: 4),
+            stack.trailingAnchor.constraint(equalTo: panel.trailingAnchor, constant: -4),
+        ])
+        view.addSubview(panel)
+        symbolPanel = panel
+        // 位置：按键上方居中，左右不出键盘。
+        let buttonFrame = view.convert(button.frame, from: button.superview)
+        let panelWidth = CGFloat(symbols.count * 44 + (symbols.count - 1) * 2 + 8)
+        let panelHeight: CGFloat = 52
+        var x = buttonFrame.midX - panelWidth / 2
+        x = max(8, min(x, view.bounds.width - panelWidth - 8))
+        let y = buttonFrame.minY - panelHeight - 8
+        panel.frame = CGRect(x: x, y: max(8, y), width: panelWidth, height: panelHeight)
+    }
+
+    func glidePathUpdated(letters: [String]) {
+        glidePreview = EnglishGlideMatcher.bestMatch(for: letters)
+        rebuildCandidateBar()
+    }
+
+    func glidePathEnded() {
+        defer {
+            glidePath = []
+            glidePreview = nil
+            rebuildCandidateBar()
+        }
+        guard mode == .english, let word = glidePreview, !word.isEmpty else { return }
+        // 滑行词：Shift 开着或句首时首字母大写（词表全小写，capitalized 安全）。
+        var text = word
+        if shiftState != .off ||
+            (FeatureFlagStore.shared.isEnabled(.autoCapitalization) && isSentenceStart()) {
+            text = word.capitalized
+        }
+        textDocumentProxy.insertText(text)
+        // 滑行后自动补一个空格（跟 Gboard / 苹果 QuickPath 一致）；
+        // 紧接着想打标点时，空格会在标点前，需按一次删除——P2 纠错可再优化。
+        textDocumentProxy.insertText(" ")
+        lastSpaceTapAt = Date()
+        if shiftState == .on {
+            shiftState = .off
+            refreshKeyTitles()
+        }
+    }
+}
+
+// MARK: - P1 手势代理（开关门控与滑行起手）
+
+extension KeyboardViewController: UIGestureRecognizerDelegate {
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        if gestureRecognizer === glidePanRecognizer {
+            // 滑行：仅英文模式，且起手落在字母键上；同时记下起手字母，
+            // 避免手势开始时手指已滑到邻键导致首字母丢了。
+            guard FeatureFlagStore.shared.isEnabled(.glideTyping), mode == .english else { return false }
+            guard let letter = letter(at: gestureRecognizer.location(in: view)) else { return false }
+            glideSeedLetter = letter
+            return true
+        }
+        if let longPress = gestureRecognizer as? UILongPressGestureRecognizer,
+           let button = longPress.view as? KeyButton {
+            if button === spaceButton {
+                return FeatureFlagStore.shared.isEnabled(.spaceCursor)
+            }
+            if button === deleteButton {
+                return FeatureFlagStore.shared.isEnabled(.deleteSwipe)
+            }
+            if letterButtons.contains(where: { $0.button === button }) {
+                return FeatureFlagStore.shared.isEnabled(.longPressSymbols)
+            }
+        }
+        return true
+    }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        // 按住字母后起滑：滑行与字母长按可同时追踪，面板冲突由 glideActive 门控处理。
+        let isGlide = gestureRecognizer === glidePanRecognizer || otherGestureRecognizer === glidePanRecognizer
+        let otherIsLetterLongPress: Bool = {
+            guard let longPress = (gestureRecognizer as? UILongPressGestureRecognizer) ?? (otherGestureRecognizer as? UILongPressGestureRecognizer),
+                  let button = longPress.view as? KeyButton else { return false }
+            return letterButtons.contains(where: { $0.button === button })
+        }()
+        return isGlide && otherIsLetterLongPress
+    }
+}
+
+// MARK: - P1 删词边界（词 = 空格分隔的连续非空格串，中日韩文按字算）
+
+extension KeyboardViewController {
+    private func isCJK(_ ch: Character) -> Bool {
+        guard let scalar = ch.unicodeScalars.first else { return false }
+        let v = scalar.value
+        return (0x4E00...0x9FFF).contains(v) || (0x3400...0x4DBF).contains(v)
+            || (0xF900...0xFAFF).contains(v) || (0x20000...0x2A6DF).contains(v)
+            || (0x3040...0x309F).contains(v) || (0x30A0...0x30FF).contains(v)
+            || (0xAC00...0xD7AF).contains(v)
+    }
+
+    /// 光标前最多能删几个词（用于滑动上限；读不到文档上下文时为 0）。
+    private func maxDeletableWords() -> Int {
+        guard let text = textDocumentProxy.documentContextBeforeInput else { return 0 }
+        var count = 0
+        var index = text.endIndex
+        while index > text.startIndex {
+            while index > text.startIndex, text[text.index(before: index)] == " " {
+                index = text.index(before: index)
+            }
+            if index == text.startIndex { break }
+            if isCJK(text[text.index(before: index)]) {
+                index = text.index(before: index)
+            } else {
+                while index > text.startIndex {
+                    let ch = text[text.index(before: index)]
+                    if ch == " " || isCJK(ch) { break }
+                    index = text.index(before: index)
+                }
+            }
+            count += 1
+        }
+        return count
+    }
+
+    /// 删 count 个词需要按几次 deleteBackward（含词前空格，一并吃掉）。
+    private func charsForDeletingWords(_ count: Int) -> Int {
+        guard let text = textDocumentProxy.documentContextBeforeInput else { return 0 }
+        var index = text.endIndex
+        var deleted = 0
+        for _ in 0..<count {
+            while index > text.startIndex, text[text.index(before: index)] == " " {
+                index = text.index(before: index)
+                deleted += 1
+            }
+            if index == text.startIndex { break }
+            if isCJK(text[text.index(before: index)]) {
+                index = text.index(before: index)
+                deleted += 1
+            } else {
+                while index > text.startIndex {
+                    let ch = text[text.index(before: index)]
+                    if ch == " " || isCJK(ch) { break }
+                    index = text.index(before: index)
+                    deleted += 1
+                }
+            }
+        }
+        return deleted
+    }
 }
 
 /// 按键：按下时轻微缩放的触感动画。
 final class KeyButton: UIButton {
-    /// P1 长按符号的数据位：该键长按时出的符号（如 q → 1）。P0 不用、不显示。
+    /// P1 长按符号的数据位：该键长按时出的首个符号（面板内容见 longPressSymbols）。
     var longPressTitle: String?
 
     override var isHighlighted: Bool {

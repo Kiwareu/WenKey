@@ -1,10 +1,11 @@
 import UIKit
 
-/// P1 手势扩展口（P0 只留接口，不挂任何手势识别器、不改打字行为）。
+/// P1 手势扩展口（P1 已接通：KeyboardViewController 实现该协议，
+/// setupP1Gestures() 里赋值并给空格键、删除键、字母键挂手势识别器）。
 ///
-/// P1 的接法：实现该协议，在 KeyboardViewController 里赋值给 `gestureHandler`，
-/// 再由实现方给空格键（`spaceButton`）、删除键（`deleteButton`）、字母键
-/// 挂对应的手势识别器，把事件回调到这里的方法。P0 不赋值，全部手势保持未接通。
+/// 协议方法是事件回调：识别器翻译层（控制器里的 *Changed 方法）把原始手势
+/// 转成这里的方法，真正的光标/删词/面板/滑行逻辑在实现里。
+/// 开关门控在手势代理 shouldBegin 里做，不在协议方法里重复判断。
 protocol KeyboardGestureHandler: AnyObject {
     /// 空格键长按变触控板：滑动增量（pt，正值向右），P1 据此移动光标。
     func spaceCursorMoved(deltaX: CGFloat)

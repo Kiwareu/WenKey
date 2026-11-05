@@ -1,10 +1,10 @@
 import Foundation
 
-/// 功能开关（P0 只留存取口，不做开关 UI、不改任何行为）。
+/// 功能开关（存取口已通；开关 UI 在 P5 接）。
 ///
-/// 规则：所有 P1 及之后的功能默认全部关闭；功能实现后，设置页再接开关 UI，
-/// 扩展侧读开关决定是否启用。开关存 App Group UserDefaults，容器 App 与扩展共用。
-/// 未设置过的开关读出来就是 false（关闭），不需要预写默认值。
+/// 默认规则：P1 核心手势默认开——用户明确要做且尚无开关 UI，关了等于 P1 白做；
+/// P5 顺手功能默认关（默认不打扰）。一旦用户在设置页改过，以用户设置为准。
+/// 未设置过的开关读出来就是默认值，不需要预写。
 public enum FeatureFlag: String, CaseIterable {
     case glideTyping = "glideTyping"                    // P1 滑行输入（英文）
     case spaceCursor = "spaceCursor"                    // P1 空格光标
@@ -21,6 +21,17 @@ public enum FeatureFlag: String, CaseIterable {
     case emojiSearch = "emojiSearch"                    // P5 表情搜索
     case keySound = "keySound"                          // P5 按键音
     case followSystemAppearance = "followSystemAppearance" // P5 跟随系统深浅色
+
+    /// P1 核心手势默认开，P5 顺手功能默认关；用户改过之后以用户设置为准。
+    public var defaultEnabled: Bool {
+        switch self {
+        case .glideTyping, .spaceCursor, .deleteSwipe,
+             .longPressSymbols, .doubleSpacePeriod, .autoCapitalization:
+            return true
+        default:
+            return false
+        }
+    }
 
     public var displayName: String {
         switch self {
@@ -58,9 +69,13 @@ public final class FeatureFlagStore {
         }
     }
 
-    /// 开关是否打开。未设置过的一律读作 false（关闭）。
+    /// 开关是否打开。未设置过的读默认值（P1 核心手势默认开，P5 默认关）。
     public func isEnabled(_ flag: FeatureFlag) -> Bool {
-        return defaults.bool(forKey: keyPrefix + flag.rawValue)
+        let key = keyPrefix + flag.rawValue
+        if defaults.object(forKey: key) == nil {
+            return flag.defaultEnabled
+        }
+        return defaults.bool(forKey: key)
     }
 
     /// 设置开关（P1/P5 的设置页开关 UI 调用）。

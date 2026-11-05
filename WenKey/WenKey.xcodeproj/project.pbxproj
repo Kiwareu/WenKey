@@ -27,6 +27,7 @@
 		A1000000000000000000003D /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000039 /* FeatureFlags.swift */; };
 		A1000000000000000000003E /* CommonPhrasesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000003A /* CommonPhrasesStore.swift */; };
 		A10000000000000000000040 /* KeyboardGestureHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000003F /* KeyboardGestureHandler.swift */; };
+		A10000000000000000000042 /* EnglishWordList.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000041 /* EnglishWordList.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -60,6 +61,7 @@
 		A10000000000000000000039 /* FeatureFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureFlags.swift; sourceTree = "<group>"; };
 		A1000000000000000000003A /* CommonPhrasesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommonPhrasesStore.swift; sourceTree = "<group>"; };
 		A1000000000000000000003F /* KeyboardGestureHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardGestureHandler.swift; sourceTree = "<group>"; };
+		A10000000000000000000041 /* EnglishWordList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnglishWordList.swift; sourceTree = "<group>"; };
 		A1000000000000000000001F /* WenKey.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WenKey.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000000000000000000020 /* WenKeyKeyboard.appex */ = {isa = PBXFileReference; explicitFileType = wrapper.app-extension; includeInIndex = 0; path = WenKeyKeyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -109,6 +111,7 @@
 			children = (
 				A10000000000000000000017 /* KeyboardViewController.swift */,
 				A1000000000000000000003F /* KeyboardGestureHandler.swift */,
+				A10000000000000000000041 /* EnglishWordList.swift */,
 				A10000000000000000000018 /* Info.plist */,
 				A10000000000000000000019 /* WenKeyKeyboard.entitlements */,
 			);
@@ -261,6 +264,7 @@
 				A1000000000000000000003D /* FeatureFlags.swift in Sources */,
 				A1000000000000000000003E /* CommonPhrasesStore.swift in Sources */,
 				A10000000000000000000040 /* KeyboardGestureHandler.swift in Sources */,
+				A10000000000000000000042 /* EnglishWordList.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
