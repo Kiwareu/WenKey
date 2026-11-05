@@ -29,6 +29,8 @@
 		A10000000000000000000040 /* KeyboardGestureHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000003F /* KeyboardGestureHandler.swift */; };
 		A10000000000000000000042 /* EnglishWordList.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000041 /* EnglishWordList.swift */; };
 		A10000000000000000000044 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000043 /* Assets.xcassets */; };
+		A10000000000000000000046 /* ClipboardStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000045 /* ClipboardStore.swift */; };
+		A10000000000000000000047 /* ClipboardStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000045 /* ClipboardStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -61,6 +63,7 @@
 		A1000000000000000000001E /* DictionaryData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryData.swift; sourceTree = "<group>"; };
 		A10000000000000000000039 /* FeatureFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureFlags.swift; sourceTree = "<group>"; };
 		A1000000000000000000003A /* CommonPhrasesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommonPhrasesStore.swift; sourceTree = "<group>"; };
+		A10000000000000000000045 /* ClipboardStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardStore.swift; sourceTree = "<group>"; };
 		A1000000000000000000003F /* KeyboardGestureHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardGestureHandler.swift; sourceTree = "<group>"; };
 		A10000000000000000000041 /* EnglishWordList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnglishWordList.swift; sourceTree = "<group>"; };
 		A10000000000000000000043 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -131,6 +134,7 @@
 				A1000000000000000000001E /* DictionaryData.swift */,
 				A10000000000000000000039 /* FeatureFlags.swift */,
 				A1000000000000000000003A /* CommonPhrasesStore.swift */,
+				A10000000000000000000045 /* ClipboardStore.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -252,6 +256,7 @@
 				A10000000000000000000028 /* DictionaryData.swift in Sources */,
 				A1000000000000000000003B /* FeatureFlags.swift in Sources */,
 				A1000000000000000000003C /* CommonPhrasesStore.swift in Sources */,
+				A10000000000000000000046 /* ClipboardStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -267,6 +272,7 @@
 				A1000000000000000000002E /* DictionaryData.swift in Sources */,
 				A1000000000000000000003D /* FeatureFlags.swift in Sources */,
 				A1000000000000000000003E /* CommonPhrasesStore.swift in Sources */,
+				A10000000000000000000047 /* ClipboardStore.swift in Sources */,
 				A10000000000000000000040 /* KeyboardGestureHandler.swift in Sources */,
 				A10000000000000000000042 /* EnglishWordList.swift in Sources */,
 			);
@@ -299,9 +305,9 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.1.1;
+				MARKETING_VERSION = 0.2.0;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -314,9 +320,9 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.1.1;
+				MARKETING_VERSION = 0.2.0;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";

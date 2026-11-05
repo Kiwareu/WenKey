@@ -38,11 +38,14 @@ jobs:
           rm -rf Payload WenKey.ipa && mkdir Payload && cp -R "$APP" Payload/
           brew install ldid || true
           if which ldid; then
-            ldid -S "Payload/WenKey.app/WenKey" || true
+            # 带 entitlements 假签：否则 App Group 权利会被 ldid -S 抹掉，
+            # 容器 App 与键盘扩展就无法共享主题/剪贴板/常用语。
+            # 自签工具（AltStore / Sideloadly）安装时会用自己的证书重签，忽略这里的假签。
+            ldid -SWenKey/App/WenKey.entitlements "Payload/WenKey.app/WenKey" || ldid -S "Payload/WenKey.app/WenKey" || true
             APEX_BIN=$(find Payload/WenKey.app/PlugIns -name "*.appex" -maxdepth 1 | head -1)
             if [ -n "$APEX_BIN" ]; then
               BIN_NAME=$(basename "$APEX_BIN" .appex)
-              ldid -S "$APEX_BIN/$BIN_NAME" || true
+              ldid -SWenKey/Keyboard/WenKeyKeyboard.entitlements "$APEX_BIN/$BIN_NAME" || ldid -S "$APEX_BIN/$BIN_NAME" || true
             fi
           fi
           zip -qry WenKey.ipa Payload
@@ -66,5 +69,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1 || gh release create "${GITHUB_REF_NAME}" --title "WenKey ${GITHUB_REF_NAME}" --notes "Unsigned test build (TrollStore / self-sign). P0 scaffold + P1 gestures. Note: App Group sync may not work until properly signed; settings fall back per process in that case."
+          gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1 || gh release create "${GITHUB_REF_NAME}" --title "WenKey ${GITHUB_REF_NAME}" --notes "Unsigned test build (self-sign recommended for keyboard extensions; TrollStore fake-sign may not wake the keyboard). Normal container app with keyboard / clipboard / phrases / skins / settings tabs."
           gh release upload "${GITHUB_REF_NAME}" "${{ steps.name.outputs.ipa }}" "${{ steps.name.outputs.ipa }}.sha256" --clobber

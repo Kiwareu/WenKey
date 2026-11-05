@@ -1,12 +1,10 @@
 import Foundation
 
-/// 常用语快捷输入的数据存取（P4 实现，P0 只留空壳）。
+/// 常用语快捷输入的数据存取：触发码 → 短语文本（比如打 dz 出地址）。
 ///
-/// 数据形态：触发码 → 短语文本（比如打 dz 出地址），存在 App Group 共享区，
-/// 与剪贴板放一起管理（DESIGN.md 补全功能一节）。
-/// P4 的接法：`phrases()` 从共享区读全部常用语，`phrase(for:)` 供引擎
-/// 在候选栏里匹配触发码，`save` / `delete` 供管理页增删。
-public struct CommonPhrase {
+/// 存取走 App Group 共享区，容器 App 与键盘扩展共用；App Group 不可用时
+/// 回落到标准 UserDefaults（仅本进程内可见），不崩溃。
+public struct CommonPhrase: Codable, Equatable {
     public let trigger: String
     public let text: String
 
@@ -19,25 +17,48 @@ public struct CommonPhrase {
 public final class CommonPhrasesStore {
     public static let shared = CommonPhrasesStore()
 
-    private init() {}
+    private let defaults: UserDefaults
+    private let key = "wenkey.phrases"
 
-    /// 全部常用语。P0 恒为空，P4 从共享区读取。
+    private init() {
+        if let shared = UserDefaults(suiteName: WenKeyConstants.appGroupID) {
+            self.defaults = shared
+        } else {
+            self.defaults = .standard
+        }
+    }
+
+    /// 全部常用语，按触发码排序。
     public func phrases() -> [CommonPhrase] {
-        return []
+        guard let data = defaults.data(forKey: key),
+              let decoded = try? JSONDecoder().decode([CommonPhrase].self, from: data) else {
+            return []
+        }
+        return decoded.sorted { $0.trigger < $1.trigger }
     }
 
-    /// 按触发码查短语。P0 恒为 nil，P4 实现匹配。
+    /// 按触发码查短语。
     public func phrase(for trigger: String) -> String? {
-        return nil
+        return phrases().first { $0.trigger == trigger }?.text
     }
 
-    /// 新增或覆盖一条常用语。P0 占位，P4 写共享区。
+    /// 新增或覆盖一条常用语。触发码或短语为空时不写。
     public func save(_ phrase: CommonPhrase) {
-        // P4: 写入 App Group 共享区。
+        let trigger = phrase.trigger.trimmingCharacters(in: .whitespacesAndNewlines)
+        let text = phrase.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trigger.isEmpty, !text.isEmpty else { return }
+        var current = phrases().filter { $0.trigger != trigger }
+        current.append(CommonPhrase(trigger: trigger, text: text))
+        if let data = try? JSONEncoder().encode(current) {
+            defaults.set(data, forKey: key)
+        }
     }
 
-    /// 按触发码删除一条常用语。P0 占位，P4 写共享区。
+    /// 按触发码删除一条常用语。
     public func delete(trigger: String) {
-        // P4: 从 App Group 共享区删除。
+        let current = phrases().filter { $0.trigger != trigger }
+        if let data = try? JSONEncoder().encode(current) {
+            defaults.set(data, forKey: key)
+        }
     }
 }

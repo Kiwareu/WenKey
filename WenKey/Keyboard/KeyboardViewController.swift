@@ -30,6 +30,8 @@ final class KeyboardViewController: UIInputViewController {
     var gestureHandler: KeyboardGestureHandler?
     /// 当前正在拼的拼音字母（小写）。中文模式专用。
     private var pinyinBuffer = ""
+    /// 剪贴板面板是否打开：打开时候选栏显示剪贴板历史，点一条上屏。
+    private var clipboardMode = false
     private var sentenceCandidates: [SentenceCandidate] = []
     private var charCandidates: [String] = []
     /// 当前切法的首选分词（用于分词候选点选后保留剩余音节）。
@@ -105,6 +107,14 @@ final class KeyboardViewController: UIInputViewController {
         super.viewWillAppear(animated)
         // 从容器 App 回来时主题可能已改，重新读取。
         applyTheme()
+        // 完全访问已开时：键盘每次出现都把系统剪贴板当前内容记一条
+        // （没开完全访问时扩展读不到共享剪贴板，这里什么都不做）。
+        if hasFullAccess, let text = UIPasteboard.general.string {
+            ClipboardStore.shared.add(text)
+        }
+        if clipboardMode {
+            rebuildCandidateBar()
+        }
     }
 
     // MARK: - 搭建 UI
@@ -203,11 +213,11 @@ final class KeyboardViewController: UIInputViewController {
         // 不再用 touchUpInside，避免长按触控板后抬起又多插一个空格。
         space.setContentHuggingPriority(.defaultLow, for: .horizontal)
 
-        // 剪贴板：P3 占位。置灰禁用，不冒充已实现。
+        // 剪贴板：点一下候选栏变剪贴板历史，点一条上屏；再点关掉。
+        // 需要完全访问才能自动记录，App 里有手动导入兜底。
         let clipboard = makeKeyButton(systemImage: "doc.on.clipboard", isFunction: true)
-        clipboard.accessibilityLabel = "剪贴板（P3 接入，暂未实现）"
-        clipboard.isEnabled = false
-        clipboard.alpha = 0.5
+        clipboard.accessibilityLabel = "剪贴板"
+        clipboard.addTarget(self, action: #selector(clipboardTapped), for: .touchUpInside)
         clipboard.widthAnchor.constraint(equalToConstant: 48).isActive = true
 
         deleteButton = makeKeyButton(systemImage: "delete.left", isFunction: true)
@@ -323,6 +333,25 @@ final class KeyboardViewController: UIInputViewController {
         }
         // 新一屏候选从头看；滑行/删词预览期间也一样（预览只有一项）。
         candidateScrollView.setContentOffset(.zero, animated: false)
+        // 剪贴板面板：优先于拼音候选显示。
+        if clipboardMode {
+            let items = ClipboardStore.shared.items()
+            if items.isEmpty {
+                let hint = UILabel()
+                hint.text = hasFullAccess ? "剪贴板是空的：先在别处复制一段，再回键盘看" : "剪贴板是空的：先在设置里开完全访问，或去 App 里手动导入"
+                hint.font = UIFont.systemFont(ofSize: 14)
+                hint.textColor = .secondaryLabel
+                candidateStack.addArrangedSubview(hint)
+            } else {
+                for item in items.prefix(20) {
+                    let button = makeCandidateButton(title: item.text) { [weak self] in
+                        self?.commitClipboardItem(item.text)
+                    }
+                    candidateStack.addArrangedSubview(button)
+                }
+            }
+            return
+        }
         // P1 预览优先于常规内容：滑行匹配词、删词词数。
         if let preview = glidePreview {
             let label = UILabel()
@@ -438,6 +467,7 @@ final class KeyboardViewController: UIInputViewController {
             return
         }
         keyHaptic.impactOccurred()
+        clipboardMode = false
         guard let pair = letterButtons.first(where: { $0.button === sender }) else { return }
         switch mode {
         case .english:
@@ -559,6 +589,19 @@ final class KeyboardViewController: UIInputViewController {
 
     @objc private func globeTapped() {
         advanceToNextInputMode()
+    }
+
+    @objc private func clipboardTapped() {
+        keyHaptic.impactOccurred()
+        clipboardMode.toggle()
+        rebuildCandidateBar()
+    }
+
+    private func commitClipboardItem(_ text: String) {
+        selectionHaptic.selectionChanged()
+        textDocumentProxy.insertText(text)
+        clipboardMode = false
+        rebuildCandidateBar()
     }
 
     // MARK: - P1 手势接线
