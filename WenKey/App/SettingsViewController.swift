@@ -28,8 +28,8 @@ final class SettingsViewController: UIViewController {
     }
 
     private func statusText() -> String {
-        let themeParts = ThemePart.allCases.map { $0.rawValue }.joined(separator: "、")
-        // 功能开关只读展示：P0 全部默认关闭；开关 UI 在 P1/P5 接，存取口已通。
+        let themeParts = ThemePart.allCases.map { $0.displayName }.joined(separator: "、")
+        // 功能开关只读展示：P1 手势默认开，其余默认关；开关 UI 在 P5 接。
         let flagLines = FeatureFlag.allCases.map { flag in
             "· \(flag.displayName)：\(FeatureFlagStore.shared.isEnabled(flag) ? "开" : "关")"
         }.joined(separator: "\n")
@@ -50,10 +50,11 @@ final class SettingsViewController: UIViewController {
         · App Group：\(WenKeyConstants.appGroupID)
 
         P0 已实现：键盘 UI、拼音整句联想、中英切换、Shift、删除、空格、回车。
-        后续阶段：P1 效率手势、P2 词库与自学习 + 英文纠错、P3 离线语音、
-        P4 剪贴板 + 常用语、P5 主题与反馈 + 顺手功能、P6 打包安装。
+        P1 已实现：滑行输入、空格光标、删词滑动、长按符号、双击空格句号、句首大写。
+        后续阶段：P2 词库与自学习 + 英文纠错、P3 离线语音、
+        P4 剪贴板 + 常用语、P5 主题与反馈 + 顺手功能。
 
-        功能开关（默认全关，开关 UI 在 P1/P5 接）：
+        功能开关（P1 手势默认开，其余默认关，开关 UI 在 P5 接）：
         \(flagLines)
         """
     }

@@ -16,6 +16,19 @@ public enum ThemePart: String, CaseIterable {
     case keyText = "keyText"
     /// 工具栏（候选栏右侧占位区）背景。
     case toolbarBackground = "toolbarBackground"
+
+    /// 给容器 App 设置页用的中文名（不直接展示英文标识符）。
+    var displayName: String {
+        switch self {
+        case .keyboardBackground: return "键盘背景"
+        case .keyBackground: return "按键"
+        case .functionKeyBackground: return "功能键"
+        case .candidateBarBackground: return "候选栏"
+        case .candidateText: return "候选文字"
+        case .keyText: return "按键文字"
+        case .toolbarBackground: return "工具栏"
+        }
+    }
 }
 
 /// 分部位主题颜色存取，走 App Group 的 UserDefaults，容器 App 与扩展共用。
