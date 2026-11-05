@@ -1,0 +1,66 @@
+name: Build WenKey IPA (unsigned)
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select newest Xcode
+        run: |
+          ls /Applications | grep -i '^Xcode' || true
+          NEW=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          [ -n "$NEW" ] && sudo xcode-select -s "$NEW/Contents/Developer" || true
+          xcodebuild -version
+      - name: Build (unsigned)
+        shell: bash
+        run: |
+          set -o pipefail
+          xcodebuild -project WenKey/WenKey.xcodeproj -target WenKey -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            ARCHS=arm64 ONLY_ACTIVE_ARCH=NO clean build 2>&1 | tee build.log | tail -60
+      - name: Show build errors
+        if: failure()
+        run: grep -n -B1 -A8 "error:\|error " build.log | head -80 || true
+      - name: Package IPA
+        run: |
+          APP=$(find build/Build/Products -name "WenKey.app" -maxdepth 3 | head -1)
+          echo "APP=$APP"
+          rm -rf Payload WenKey.ipa && mkdir Payload && cp -R "$APP" Payload/
+          brew install ldid || true
+          if which ldid; then
+            ldid -S "Payload/WenKey.app/WenKey" || true
+            APEX_BIN=$(find Payload/WenKey.app/PlugIns -name "*.appex" -maxdepth 1 | head -1)
+            if [ -n "$APEX_BIN" ]; then
+              BIN_NAME=$(basename "$APEX_BIN" .appex)
+              ldid -S "$APEX_BIN/$BIN_NAME" || true
+            fi
+          fi
+          zip -qry WenKey.ipa Payload
+          unzip -l WenKey.ipa | head -20
+      - name: Name assets from the tag
+        id: name
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then V="${GITHUB_REF_NAME}"; else V="v$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Payload/WenKey.app/Info.plist)"; fi
+          cp WenKey.ipa "WenKey-${V}.ipa"
+          shasum -a 256 "WenKey-${V}.ipa" > "WenKey-${V}.ipa.sha256"
+          echo "ipa=WenKey-${V}.ipa" >> "$GITHUB_OUTPUT"
+          cat "WenKey-${V}.ipa.sha256"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.name.outputs.ipa }}
+          path: |
+            ${{ steps.name.outputs.ipa }}
+            ${{ steps.name.outputs.ipa }}.sha256
+      - name: Attach IPA to release (tag builds only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1 || gh release create "${GITHUB_REF_NAME}" --title "WenKey ${GITHUB_REF_NAME}" --notes "Unsigned test build (TrollStore / self-sign). P0 scaffold + P1 gestures. Note: App Group sync may not work until properly signed; settings fall back per process in that case."
+          gh release upload "${GITHUB_REF_NAME}" "${{ steps.name.outputs.ipa }}" "${{ steps.name.outputs.ipa }}.sha256" --clobber
